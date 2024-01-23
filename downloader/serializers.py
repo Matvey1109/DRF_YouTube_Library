@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import Video
+from pytube import YouTube
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -22,4 +23,5 @@ class UserSerializer(serializers.ModelSerializer):
 class VideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Video
-        fields = ("title", "author", "thumbnail_url", "number_of_views", "user")
+        fields = ["id", "title", "author", "thumbnail_url", "number_of_views", "user"]
+        read_only_fields = ["id"]

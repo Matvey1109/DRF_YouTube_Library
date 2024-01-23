@@ -1,10 +1,11 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import generics, serializers, status
+from rest_framework.views import APIView
+from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser
-from django.contrib.auth.models import User
-from .models import Video
 from .serializers import UserSerializer, VideoSerializer
+from .models import Video
+from django.contrib.auth.models import User
 from pytube import YouTube
 
 
@@ -14,16 +15,9 @@ class UserList(generics.ListCreateAPIView):
     permission_classes = [IsAdminUser]
 
 
-class VideoList(generics.ListCreateAPIView):
-    queryset = Video.objects.all()
-    serializer_class = VideoSerializer
-
-    def perform_create(self, serializer):
-        part_of_url = self.request.GET.get("part_of_url")
-
-        if not part_of_url:
-            raise serializers.ValidationError("part_of_url is required.")
-
+class VideoList(APIView):
+    def post(self, request):
+        part_of_url = request.data.get("part_of_url")  # part_of_url as a body param
         url = "https://www.youtube.com/watch?v=" + part_of_url
 
         try:
@@ -33,22 +27,17 @@ class VideoList(generics.ListCreateAPIView):
                 "author": yt.author,
                 "thumbnail_url": yt.thumbnail_url,
                 "number_of_views": yt.views,
-                "user": self.request.user,
+                "user": request.user.id,
             }
 
-            serializer.validated_data.update(video_data)
-            serializer.save()
-        except Exception as e:
-            raise serializers.ValidationError(str(e))
+            serializer = VideoSerializer(data=video_data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    def create(self, request, *args, **kwargs):
-        # Allow only POST requests with 'part_of_url' in the query parameters
-        if request.method == "POST" and not request.GET.get("part_of_url"):
-            return Response(
-                {"error": "part_of_url is required in the query parameters."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        return super().create(request, *args, **kwargs)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(["GET"])
@@ -70,3 +59,5 @@ yt = YouTube(url)
 # print(yt.author)
 # print(yt.views)
 # print(yt.thumbnail_url)
+
+{"part_of_url": "9bZkp7q19f0"}
