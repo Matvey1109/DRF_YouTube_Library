@@ -5,6 +5,7 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser
 from .serializers import UserSerializer, VideoSerializer
 from .models import Video
+from .permissions import IsOwnerOrReadOnly
 from django.contrib.auth.models import User
 from pytube import YouTube
 
@@ -15,7 +16,7 @@ class UserList(generics.ListCreateAPIView):
     permission_classes = [IsAdminUser]
 
 
-class VideoList(APIView):
+class VideoCreate(APIView):
     def post(self, request):
         part_of_url = request.data.get("part_of_url")  # part_of_url as a body param
         url = "https://www.youtube.com/watch?v=" + part_of_url
@@ -36,8 +37,26 @@ class VideoList(APIView):
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
 
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserVideosList(generics.ListAPIView):
+    serializer_class = VideoSerializer
+
+    def get_queryset(self):
+        user_id = self.kwargs["user_id"]
+        return Video.objects.filter(user=user_id)
+
+
+class VideoDelete(generics.DestroyAPIView):
+    queryset = Video.objects.all()
+    serializer_class = VideoSerializer
+    permission_classes = [IsOwnerOrReadOnly]
+
+    def perform_destroy(self, instance):
+        instance.delete()
 
 
 @api_view(["GET"])
@@ -50,14 +69,3 @@ def download(request, url):
         return Response({"msg": "Video downloaded successfully!"})
     except Exception as e:
         return Response({"error": str(e)})
-
-
-url = "9bZkp7q19f0"
-url = "https://www.youtube.com/watch?v=" + url
-yt = YouTube(url)
-# print(yt.title)
-# print(yt.author)
-# print(yt.views)
-# print(yt.thumbnail_url)
-
-{"part_of_url": "9bZkp7q19f0"}

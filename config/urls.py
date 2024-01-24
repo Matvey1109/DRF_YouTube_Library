@@ -17,13 +17,21 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from .yasg import urlpatterns as docs_url
-from downloader.views import download, UserList, VideoList
+from downloader.views import (
+    download,
+    UserList,
+    VideoCreate,
+    UserVideosList,
+    VideoDelete,
+)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/drf-auth/", include("rest_framework.urls")),
     path("api/v1/users/", UserList.as_view()),
-    path("api/v1/videos/", VideoList.as_view()),
+    path("api/v1/videos/", VideoCreate.as_view()),
+    path("api/v1/videos/<str:user_id>", UserVideosList.as_view()),
+    path("api/v1/video_del/<int:pk>", VideoDelete.as_view()),
     path("api/v1/download/<str:url>/", download),
 ]
 
