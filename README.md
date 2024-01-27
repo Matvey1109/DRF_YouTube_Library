@@ -5,4 +5,4 @@ docker-compose up -d --build
 # http://localhost:5050/ - pgadmin
 ```
 ## API Docs
-![App Screenshot](https://raw.github.com/Matvey1109/Drf_project/main/screenshots/swagger.png)
+![App Screenshot](https://raw.github.com/Matvey1109/DRF_YouTube_Library/main/screenshots/swagger.png)
